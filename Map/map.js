@@ -2,13 +2,15 @@ var socket;
 var map;
 var lastCoor=null;
 var line;
+var path =[];
 
 function connect(){
 	socket = io.connect(location.host);
 	socket.on('test', function(){
 		alert("test");
 	});
-	socket.on('loc', plot);	
+	socket.on('path_data', plot);	
+	socket.on('clear', clear);
 }
 
 function initialize() {
@@ -35,24 +37,34 @@ function moveTo(){
 }
 
 function plot(params){
+	
 	if (lastCoor == null){
 		lastCoor = params;
 		map.panTo(google.maps.LatLng(params.lat, params.long));
 	}
 	else{
-		var pathCoors = [new google.maps.LatLng(lastCoor.lat, lastCoor.long),
+		var lineCoors = [new google.maps.LatLng(lastCoor.lat, lastCoor.long),
 						 new google.maps.LatLng(params.lat, params.long)];
-		var path = new google.maps.Polyline({
-			path: pathCoors,
+		var line = new google.maps.Polyline({
+			path: lineCoors,
 			geodesic: true,
 			strokeColor: '#FF0000',
 			strokeOpacity: 1.0,
 			strokeWeight: 2
 		});
-		path.setMap(map);
+		//alert("Here");
+		line.setMap(map);
+		path.push(line);
 		lastCoor=params;
 		map.panTo(google.maps.LatLng(params.lat, params.long));
 	}
+}
+
+function clear(){
+	for(var i =0; i<path.length; i++){
+		path[i].setMap(null);	
+	}
+	path = [];
 }
 
 function timeRange(){
@@ -61,7 +73,7 @@ function timeRange(){
     var first = new Date(startDate+'T'+startTime);
 	//We must now compensate for the fact that this Datetime thinks it's in UTC
 	var dateMillis = first.getTime();
-	//getTimezonOffset returns minutes, so we multiple by 60 to get seconds
+	//getTimezoneOffset returns minutes, so we multiple by 60 to get seconds
 	//And then by 1000 to get milliseconds
 	first = new Date(dateMillis + first.getTimezoneOffset()*60*1000);
 
@@ -76,8 +88,7 @@ function timeRange(){
 	else{
 		socket.emit('time_req', {'start':first.toISOString(),
 								'end':second.toISOString()});
-		//alert("Request Sent");
-	}
+		}
 }
 
 google.maps.event.addDomListener(window, 'load', initialize);
