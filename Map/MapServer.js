@@ -38,18 +38,17 @@ var io = require('socket.io').listen(server);
 io.set('log level', 2);
 
 io.sockets.on('connection', function(socket){
-	socket.on('test', function(){
-		console.log("This is a test");
-		socket.emit('test');
-	});	
+
 	socket.on('loc', function(params){
 		console.log("Lat: "+ params.lat + " Long: "+ params.long);
 		socket.emit('loc_recv', {status:'recv'});
-		socket.broadcast.emit('loc', {lat:params.lat, long:params.long});
-		console.log('loc_recv sent');	
+		socket.broadcast.emit('path_data', {lat:params.lat, long:params.long});	
 	});
 	socket.on('time_req', function(params){
 		console.log(params);
 		socket.broadcast.emit('time_query', params);
+	});
+	socket.on('clear', function(){
+		socket.broadcast.emit('clear');
 	});
 });
