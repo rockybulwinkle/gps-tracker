@@ -15,7 +15,7 @@ function connect(){
 
 function initialize() {
 	var mapOptions = {
-        	center: new google.maps.LatLng(-34.397, 150.644),
+        	center: new google.maps.LatLng(39.4827, -87.3240),
         	zoom: 8,
         	mapTypeId: google.maps.MapTypeId.ROADMAP
         };
@@ -37,18 +37,31 @@ function moveTo(){
 }
 
 function plot(params){
-	
 	if (lastCoor == null){
 		lastCoor = params;
 		map.panTo(google.maps.LatLng(params.lat, params.long));
 	}
 	else{
+		var green;
+		var red;
+		if(params.hdp < 1.2){
+			red ='00';
+			green = 'FF';
+		}
+		else if(params.hdp > 5){
+			red = 'FF';
+			green = '00'
+		}
+		else{
+			red = (1-(-.3158 + .2632*params.hdp)).toString(16);
+			green = (-.3158 + .2632*params.hdp).toString(16);
+		}
 		var lineCoors = [new google.maps.LatLng(lastCoor.lat, lastCoor.long),
 						 new google.maps.LatLng(params.lat, params.long)];
 		var line = new google.maps.Polyline({
 			path: lineCoors,
 			geodesic: true,
-			strokeColor: '#FF0000',
+			strokeColor: (red+green),
 			strokeOpacity: 1.0,
 			strokeWeight: 2
 		});
@@ -64,6 +77,7 @@ function clear(){
 	for(var i =0; i<path.length; i++){
 		path[i].setMap(null);	
 	}
+	lastCoor = null;
 	path = [];
 }
 
