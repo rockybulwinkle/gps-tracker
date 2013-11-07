@@ -98,7 +98,12 @@ io.sockets.on('connection', function (socket) {
 //            console.log('emitted gpio: ' + x.value + ', ' + gpioNum);
         });
     });
-
+    socket.on('loc', function(params){
+	console.log('Lat: '+ params.lat + "  Long: "+ params.long);
+	socket.emit('plot', params);
+	socket.emit('loc_recv');
+	console.log('done');
+	});
     socket.on('i2c', function (i2cNum) {
 //        console.log('Got i2c request:' + i2cNum);
         child_process.exec('i2cget -y 1 ' + i2cNum + ' 0 w',

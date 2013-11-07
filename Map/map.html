@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+	html { height: 100% }
+     	body { height: 100%; margin: 0; padding: 0 }
+      	#map-canvas { height: 90%; top:50px }
+    </style>
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCksRMHIDnytHj9YUsVIM-8VAu4BvK-eSw&sensor=true">
+    </script>
+    <script src = "/json.js"></script> 
+    <script src = "/socket.io/socket.io.js"></script>
+    <script src = "jquery.js"></script>
+  </head>
+<body>
+	<button id="moveTo" onClick='moveTo()'/>Move To</button>
+	lat:<input id="lat" type = "number" value=0>
+	long:<input id ='long' type = "number" value=0>
+	<div id="map-canvas"/>
+	<script src="map.js"></script>
+</body>
+</html>

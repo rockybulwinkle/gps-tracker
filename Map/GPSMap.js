@@ -6,7 +6,7 @@ var	port = 8080,
 	url = require('url'),
 	fs = require('fs'),
 	server,
-    	homePage = '/testmap.html';
+	homePage = '/map.html';
 
 function send404(res){
 	res.writeHead(404);
@@ -33,3 +33,22 @@ server = http.createServer(function(req, res){
 //Listen to port
 server.listen(port);
 console.log("Listening on "+ port);
+
+var io = require('socket.io').listen(server);
+io.set('log level', 2);
+
+io.sockets.on('connection', function(socket){
+	socket.on('test', function(){
+		console.log("This is a test");
+		socket.emit('test');
+	});	
+	socket.on('loc', function(params){
+		console.log("Lat: "+ params.lat + " Long: "+ params.long);
+		socket.emit('loc_recv', {status:'recv'});
+		socket.broadcast.emit('loc', {lat:params.lat, long:params.long});
+		//sendData(params);
+		console.log('loc_recv sent');
+		//socket.emit('test');
+		
+	});
+});

@@ -35,7 +35,30 @@ src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCksRMHIDnytHj9YUsVIM-8VAu
 		});
 		map.panTo(pos);
 	}
-	map.addListener('moveTo', moveTo)
+	function test(){
+		socket.emit('hi');
+		alert("test");
+	}
+
+	function plot(params){
+		var pos = new google.maps.LatLng(params.lat, params.long);
+		var marker = new google.maps.Marker({
+			position: pos,
+			map: map,
+			title: 'Marker'
+		});
+		map.panTo(pos);
+		alert("Here")
+	}
+	
+	map.addListener('moveTo', moveTo);
+	map.addlistener('test', test);
+	map.addlistener('plot', function(params){
+		alert(params.lat);
+	});
+//	socket.on('plot', function(params){
+//		alert(params.lat);
+//	});
     </script>
   </head>
   <body>
