@@ -5,14 +5,10 @@ var line;
 
 function connect(){
 	socket = io.connect(location.host);
-	//socket = io.connect(null);
 	socket.on('test', function(){
 		alert("test");
 	});
-	socket.on('loc', plot);
-	//socket.on('loc', function(params){
-	//	alert('lat: '+params.lat);
-	//});
+	socket.on('loc', plot);	
 }
 
 function initialize() {
@@ -42,7 +38,7 @@ function plot(params){
 	
 	if (lastCoor == null){
 		lastCoor = params;
-		
+		map.panTo(google.maps.LatLng(params.lat, params.long));
 	}
 	else{
 		var pathCoors = [new google.maps.LatLng(lastCoor.lat, lastCoor.long),
@@ -56,6 +52,7 @@ function plot(params){
 		});
 		path.setMap(map);
 		lastCoor=params;
+		map.panTo(params.lat, params.long);
 	}
 }
 
