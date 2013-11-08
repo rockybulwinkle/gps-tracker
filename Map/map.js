@@ -1,5 +1,7 @@
 var socket;
 var map;
+var lastCoor=null;
+var line;
 
 function connect(){
 	socket = io.connect(location.host);
@@ -33,17 +35,28 @@ function moveTo(){
 		title: 'Marker'
 	});
 	map.panTo(pos);
-	socket.emit('test');
+	socket.emit('move');
 }
 
 function plot(params){
-	var pos = new google.maps.LatLng(params.lat, params.long);
-	var marker = new google.maps.Marker({
-		position: pos,
-		map: map,
-		title: 'Marker'
-	});
-	map.panTo(pos);
+	
+	if (lastCoor == null){
+		lastCoor = params;
+		
+	}
+	else{
+		var pathCoors = [new google.maps.LatLng(lastCoor.lat, lastCoor.long),
+						 new google.maps.LatLng(params.lat, params.long)];
+		var path = new google.maps.Polyline({
+			path: pathCoors,
+			geodesic: true,
+			strokeColor: '#FF0000',
+			strokeOpacity: 1.0,
+			strokeWeight: 2
+		});
+		path.setMap(map);
+		lastCoor=params;
+	}
 }
 
 google.maps.event.addDomListener(window, 'load', initialize);
