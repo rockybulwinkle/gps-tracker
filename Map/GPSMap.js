@@ -46,9 +46,11 @@ io.sockets.on('connection', function(socket){
 		console.log("Lat: "+ params.lat + " Long: "+ params.long);
 		socket.emit('loc_recv', {status:'recv'});
 		socket.broadcast.emit('loc', {lat:params.lat, long:params.long});
-		//sendData(params);
-		console.log('loc_recv sent');
-		//socket.emit('test');
-		
+		console.log('loc_recv sent');	
+	});
+	socket.on('move', function(){
+		console.log("Sending move request");
+		socket.broadcast.emit('move', {hi:"hi"});
+		console.log("Move request Sent");
 	});
 });
