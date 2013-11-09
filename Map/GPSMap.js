@@ -48,9 +48,8 @@ io.sockets.on('connection', function(socket){
 		socket.broadcast.emit('loc', {lat:params.lat, long:params.long});
 		console.log('loc_recv sent');	
 	});
-	socket.on('move', function(){
-		console.log("Sending move request");
-		socket.broadcast.emit('move', {hi:"hi"});
-		console.log("Move request Sent");
+	socket.on('time_req', function(params){
+		console.log(params);
+		socket.broadcast.emit('time_query', params);
 	});
 });

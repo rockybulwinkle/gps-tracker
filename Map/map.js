@@ -35,7 +35,6 @@ function moveTo(){
 }
 
 function plot(params){
-	
 	if (lastCoor == null){
 		lastCoor = params;
 		map.panTo(google.maps.LatLng(params.lat, params.long));
@@ -52,7 +51,32 @@ function plot(params){
 		});
 		path.setMap(map);
 		lastCoor=params;
-		map.panTo(params.lat, params.long);
+		map.panTo(google.maps.LatLng(params.lat, params.long));
+	}
+}
+
+function timeRange(){
+	var startDate = document.getElementById('startDate').value;
+	var startTime = document.getElementById('startTime').value;
+    var first = new Date(startDate+'T'+startTime);
+	//We must now compensate for the fact that this Datetime thinks it's in UTC
+	var dateMillis = first.getTime();
+	//getTimezonOffset returns minutes, so we multiple by 60 to get seconds
+	//And then by 1000 to get milliseconds
+	first = new Date(dateMillis + first.getTimezoneOffset()*60*1000);
+
+	endDate = document.getElementById('endDate').value;
+	endTime = document.getElementById('endTime').value;
+	second = new Date(endDate + 'T'+endTime);
+	dateMillis = second.getTime();
+	second = new Date(dateMillis + second.getTimezoneOffset()*60*1000);
+	if(second.getTime() < first.getTime()){
+		alert("Start Time must come before End Time");
+	}
+	else{
+		socket.emit('time_req', {'start':first.toISOString(),
+								'end':second.toISOString()});
+		//alert("Request Sent");
 	}
 }
 
