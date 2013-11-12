@@ -78,16 +78,17 @@ def on_recv(*args):
 
 
 
-def serial_handler():
+def serial_handler(lock):
 	socketIO = SocketIO('localhost', 8080)
 	serial_port = serial.Serial(port=GPS_PORT, baudrate=9600)
 	last_date = None
-	conn = sqlite3.connect(DB_FILE)
-	cur = conn.cursor()
 	for line in serial_port:
 		socketIO._transport.send_heartbeat()
 		if "GPGGA" in line and last_date:
 			line = parse_gps(line)
+			lock.acquire()
+			conn = sqlite3.connect(DB_FILE)
+			cur = conn.cursor()
 			cur.execute('insert into gps_data \
 				(date,long,lat,fix_quality,num_sats,\
 				hdp,altitude) values (?,?,?,?,?,?,?);'\
@@ -103,7 +104,10 @@ def serial_handler():
 			if tracking_mode_type=='true':
 				print "sending"
 				socketIO.emit('loc', line)
-
+			print line["long"],line["lat"]
+			conn.close()
+			lock.release()
+		
 		
 			
 			#os.close(write_pipe)
@@ -116,31 +120,39 @@ def do_time_search(socket, cursor):
 	cursor.execute("select key_value from config where key_name='query.time.end'")
 	end_time = dateutil.parser.parse(cursor.fetchone()[0])
 	print start_time,end_time
+	socket.emit("clear")
+	cursor.execute("select lat,long from gps_data where date > ? and date < ?  order by date desc;", (start_time,end_time))
+	for loc in cursor.fetchall():
+		print loc
+		socket.emit("loc", {"long":loc[1],"lat":loc[0]})
 
-def search_handler():
-	conn = sqlite3.connect(DB_FILE)
-	cur = conn.cursor()
+def search_handler(lock):
 	socketIO = SocketIO('localhost', 8080)
 	#socketIO.on('loc_recv', on_recv)
 	while (True):
+		lock.acquire()
+		conn = sqlite3.connect(DB_FILE)
+		cur = conn.cursor()
 		cur.execute("select key_value from config where key_name='query.waiting'")
 		waiting = cur.fetchone()[0]
 		if waiting == "true":
 			cur.execute("update config set key_value='false'\
 			where key_name='query.waiting'")
+			conn.commit()
 			cur.execute("select key_value from config where\
 			key_name='query.type'")
 			type = cur.fetchone()[0]
 			if type == 'time':
 				do_time_search(socketIO,cur)
-		time.sleep(1)
+			conn.close()
 		socketIO._transport.send_heartbeat()
+		lock.release()
 
-def settings_handler():
-	conn = sqlite3.connect(DB_FILE)
-	cur = conn.cursor()
-
+def settings_handler(lock):
 	def update_time_query(*args):
+		lock.acquire()
+		conn = sqlite3.connect(DB_FILE)
+		cur = conn.cursor()
 		cur.execute("update config set\
 			key_value='time' where key_name=\
 			'query.type';")
@@ -156,16 +168,19 @@ def settings_handler():
 		cur.close()
 		conn.commit()
 		conn.close()
+		lock.release()
 	
 	socketIO = SocketIO('localhost', 8080)
 	socketIO.on('time_query', update_time_query)
 	socketIO.wait()
 
-search_handler = mp.Process(target=search_handler)
+lock = mp.Lock()
+
+search_handler = mp.Process(target=search_handler, args=(lock,))
 search_handler.start()
-serial_handler = mp.Process(target=serial_handler)
+serial_handler = mp.Process(target=serial_handler, args=(lock,))
 serial_handler.start()
-settings_handler = mp.Process(target=settings_handler)
+settings_handler = mp.Process(target=settings_handler, args=(lock,))
 settings_handler.start()
 #socketIO.emit('loc', {"lat":"86", "long_":"42"})
 #socketIO.wait(seconds=1)
