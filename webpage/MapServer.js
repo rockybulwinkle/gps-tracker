@@ -40,12 +40,12 @@ io.set('log level', 2);
 io.sockets.on('connection', function(socket){
 
 	socket.on('loc', function(params){
-		console.log(params);
+		//console.log(params);
 		socket.emit('loc_recv', {status:'recv'});
 		socket.broadcast.emit('path_data', params);	
 	});
 	socket.on('time_req', function(params){
-		console.log(params);
+		//console.log(params);
 		socket.broadcast.emit('time_query', params);
 	});
 	socket.on('clear', function(){
@@ -53,7 +53,7 @@ io.sockets.on('connection', function(socket){
 	});
 	socket.on('color', function(params){
 		//console.log('Red: '+params.red+' Green:' + params.green)
-		console.log(params)
+		//console.log(params)
 	});
 	socket.on('mode', function(params){
 		socket.broadcast.emit('mode', params);

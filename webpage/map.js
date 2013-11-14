@@ -95,7 +95,7 @@ function plot(params){
 
 		}
 		var color = red +''+ green + '' +'00';
-		alert(color);
+		//alert(color);
 		socket.emit('color',{'red':red, 'green':green, "my_hdp":my_hdp});
 		var lineCoors = [new google.maps.LatLng(lastCoor.lat, lastCoor.long),
 						 new google.maps.LatLng(params.lat, params.long)];
@@ -110,6 +110,7 @@ function plot(params){
 		line.setMap(map);
 		path.push(line);
 		lastCoor=params;
+		document.getElementById('time').innerHTML = 'Time:'+params.date
 		map.panTo(google.maps.LatLng(params.lat, params.long));
 	}
 }
