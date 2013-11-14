@@ -4,7 +4,7 @@
 import os
 import multiprocessing as mp
 GPS_PORT = '/dev/ttyO4'
-DB_FILE = 'gps_db'
+DB_FILE = '../var/gps_db'
 LOST_SIGNAL = 0
 from socketIO_client import SocketIO
 import serial
@@ -82,7 +82,7 @@ def serial_handler(lock):
 	serial_port = serial.Serial(port=GPS_PORT, baudrate=9600)
 	last_date = None
 	for line in serial_port:
-		out_file = open("log.dat","a")
+		out_file = open("../var/log.dat","a")
 		out_file.write(line)
 		out_file.close()
 		socketIO._transport.send_heartbeat()
