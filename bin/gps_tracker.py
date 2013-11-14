@@ -124,10 +124,9 @@ def do_time_search(socket, cursor):
 	end_time = dateutil.parser.parse(cursor.fetchone()[0])
 	print start_time,end_time
 	socket.emit("clear")
-	cursor.execute("select lat,long,hdp,num_sats,fix_quality,altitude from gps_data where date > ? and date < ?  order by date asc;", (start_time,end_time))
-	for lat,long,hdp,num_sats,fix_quality,altitude in cursor.fetchall():
-		print lat,long,hdp,num_sats,fix_quality,altitude
-		socket.emit("loc", {"lat":lat,"long":long,"hdp":hdp,"num_sats":num_sats,"fix_quality":fix_quality,"altitude":altitude})
+	cursor.execute("select date,lat,long,hdp,num_sats,fix_quality,altitude from gps_data where date > ? and date < ?  order by date asc;", (start_time,end_time))
+	for date_,lat,long,hdp,num_sats,fix_quality,altitude in cursor.fetchall():
+		socket.emit("loc", {"lat":lat,"long":long,"hdp":hdp,"num_sats":num_sats,"fix_quality":fix_quality,"altitude":altitude, "date":date_})
 
 def search_handler(lock):
 	socketIO = SocketIO('localhost', 8080)
