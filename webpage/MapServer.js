@@ -23,7 +23,7 @@ server = http.createServer(function(req, res){
 		path = homePage;
 	}
 	console.log("path: "+path);
-	fs.readFile(__dirname + path, function(err, data){
+	fs.readFile(__dirname+ path, function(err, data){
 		if(err) {return send404(res)};
 		res.write(data, 'utf8');
 		res.end();
