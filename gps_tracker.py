@@ -66,7 +66,7 @@ def parse_date(line):
 	hour = tod[-6:-4]
 
 	date_ = line_[9]
-	year = date_[-2:]
+	year = "20" + date_[-2:]
 	month = date_[-4:-2]
 	day = date_[-6:-4]
 	print hour,minute,second,year,day,month
@@ -77,37 +77,40 @@ def on_recv(*args):
 	print 'on_aaa_response', args
 
 
-
 def serial_handler(lock):
 	socketIO = SocketIO('localhost', 8080)
 	serial_port = serial.Serial(port=GPS_PORT, baudrate=9600)
 	last_date = None
 	for line in serial_port:
+		out_file = open("log.dat","a")
+		out_file.write(line)
+		out_file.close()
 		socketIO._transport.send_heartbeat()
 		if "GPGGA" in line and last_date:
 			line = parse_gps(line)
-			lock.acquire()
-			conn = sqlite3.connect(DB_FILE)
-			cur = conn.cursor()
-			cur.execute('insert into gps_data \
-				(date,long,lat,fix_quality,num_sats,\
-				hdp,altitude) values (?,?,?,?,?,?,?);'\
-				,[last_date,line["long"],line["lat"]\
-				,line["fix_quality"], line["num_sats"]\
-				,line["hdp"], line["altitude"]] )
-			conn.commit()
+			if line["fix_quality"] != "0":
+				lock.acquire()
+				conn = sqlite3.connect(DB_FILE)
+				cur = conn.cursor()
+				cur.execute('insert into gps_data \
+					(date,long,lat,fix_quality,num_sats,\
+					hdp,altitude) values (?,?,?,?,?,?,?);'\
+					,[last_date,line["long"],line["lat"]\
+					,line["fix_quality"], line["num_sats"]\
+					,line["hdp"], line["altitude"]] )
+				conn.commit()
 
-			cur.execute("select key_value from\
-				config where key_name=\
-				'tracking.mode.type'")
-			tracking_mode_type = cur.fetchone()[0]
-			if tracking_mode_type=='true':
-				print "sending"
-				socketIO.emit('loc', line)
-			print line["long"],line["lat"]
-			conn.close()
-			lock.release()
-		
+				cur.execute("select key_value from\
+					config where key_name=\
+					'tracking.mode.type'")
+				tracking_mode_type = cur.fetchone()[0]
+				if tracking_mode_type=='live':
+					print "sending"
+					socketIO.emit('loc', line)
+				print line["long"],line["lat"]
+				conn.close()
+				lock.release()
+			
 		
 			
 			#os.close(write_pipe)
@@ -121,10 +124,10 @@ def do_time_search(socket, cursor):
 	end_time = dateutil.parser.parse(cursor.fetchone()[0])
 	print start_time,end_time
 	socket.emit("clear")
-	cursor.execute("select lat,long from gps_data where date > ? and date < ?  order by date desc;", (start_time,end_time))
-	for loc in cursor.fetchall():
-		print loc
-		socket.emit("loc", {"long":loc[1],"lat":loc[0]})
+	cursor.execute("select lat,long,hdp,num_sats,fix_quality,altitude from gps_data where date > ? and date < ?  order by date asc;", (start_time,end_time))
+	for lat,long,hdp,num_sats,fix_quality,altitude in cursor.fetchall():
+		print lat,long,hdp,num_sats,fix_quality,altitude
+		socket.emit("loc", {"lat":lat,"long":long,"hdp":hdp,"num_sats":num_sats,"fix_quality":fix_quality,"altitude":altitude})
 
 def search_handler(lock):
 	socketIO = SocketIO('localhost', 8080)
@@ -135,6 +138,7 @@ def search_handler(lock):
 		cur = conn.cursor()
 		cur.execute("select key_value from config where key_name='query.waiting'")
 		waiting = cur.fetchone()[0]
+
 		if waiting == "true":
 			cur.execute("update config set key_value='false'\
 			where key_name='query.waiting'")
@@ -147,24 +151,47 @@ def search_handler(lock):
 			conn.close()
 		socketIO._transport.send_heartbeat()
 		lock.release()
+		time.sleep(1)
 
 def settings_handler(lock):
 	def update_time_query(*args):
 		lock.acquire()
 		conn = sqlite3.connect(DB_FILE)
 		cur = conn.cursor()
-		cur.execute("update config set\
-			key_value='time' where key_name=\
-			'query.type';")
-		cur.execute("update config set\
-			key_value=? where key_name=\
-			'query.time.start'", (args[0]["start"],))
-		cur.execute("update config set\
-			key_value=? where key_name=\
-			'query.time.end'", (args[0]["end"],))
-		cur.execute("update config set\
-			key_value='true' where key_name=\
-			'query.waiting'")
+		cur.execute("select key_value from config where key_name='tracking.mode.type'")
+		mode = cur.fetchone()[0]
+		if mode != "live":
+			cur.execute("update config set\
+				key_value='time' where key_name=\
+				'query.type';")
+			cur.execute("update config set\
+				key_value=? where key_name=\
+				'query.time.start'", (args[0]["start"],))
+			cur.execute("update config set\
+				key_value=? where key_name=\
+				'query.time.end'", (args[0]["end"],))
+			cur.execute("update config set\
+				key_value='true' where key_name=\
+				'query.waiting'")
+			cur.close()
+		conn.commit()
+		conn.close()
+		lock.release()
+	def update_mode(*args):
+		lock.acquire()
+		conn = sqlite3.connect(DB_FILE)
+		cur = conn.cursor()
+		if args and args[0]["mode"] == "live":
+			cur.execute("update config set\
+				key_value='live' where key_name=\
+				'tracking.mode.type';")
+			print "set  to live"
+		else:
+			cur.execute("update config set\
+				key_value='search' where key_name=\
+				'tracking.mode.type';")
+			print "set to %s"%args[0]["mode"]
+	
 		cur.close()
 		conn.commit()
 		conn.close()
@@ -172,6 +199,7 @@ def settings_handler(lock):
 	
 	socketIO = SocketIO('localhost', 8080)
 	socketIO.on('time_query', update_time_query)
+	socketIO.on('mode', update_mode)
 	socketIO.wait()
 
 lock = mp.Lock()
