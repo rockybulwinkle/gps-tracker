@@ -1,25 +1,2 @@
-create table gps_data(
-	date datetime,
-	long double,
-	lat double,
-	fix_quality integer,
-	num_sats integer,
-	hdp float,
-	altitude float,
-	id integer primary key
-);
-
-create table config(
-	key_name varchar(255) primary key,
-	key_value varchar(255)
-);
-
-insert into config (key_name, key_value) values ("tracking.mode.type", "live");
-insert into config (key_name, key_value) values ("tracking.mode.enable", "true");
-insert into config (key_name, key_value) values ("query.type", "");
-insert into config (key_name, key_value) values ("query.time.start", "");
-insert into config (key_name, key_value) values ("query.time.end", "");
-insert into config (key_name, key_value) values ("query.waiting", "false");
-
-
-
+#!/bin/bash
+sqlite3 ../var/gps_db < db_tables
