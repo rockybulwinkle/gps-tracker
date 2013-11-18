@@ -16,7 +16,7 @@ create table config(
 
 insert into config (key_name, key_value) values ("tracking.mode.type", "live");
 insert into config (key_name, key_value) values ("tracking.mode.enable", "true");
-insert into config (key_name, key_value) values ("query.type", "");
+insert into config (key_name, key_value) values ("query.type", "live");
 insert into config (key_name, key_value) values ("query.time.start", "");
 insert into config (key_name, key_value) values ("query.time.end", "");
 insert into config (key_name, key_value) values ("query.waiting", "false");
