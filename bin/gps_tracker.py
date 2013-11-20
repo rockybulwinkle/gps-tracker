@@ -4,7 +4,7 @@
 import os
 import multiprocessing as mp
 GPS_PORT = '/dev/ttyO4'
-DB_FILE = '../var/gps_db'
+DB_FILE = './var/gps_db'
 LOST_SIGNAL = 0
 from socketIO_client import SocketIO
 import serial
