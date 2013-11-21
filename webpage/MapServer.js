@@ -40,9 +40,10 @@ io.set('log level', 2);
 io.sockets.on('connection', function(socket){
 
 	socket.on('loc', function(params){
-		//console.log(params);
+//		console.log(params);
 		socket.emit('loc_recv', {status:'recv'});
 		socket.broadcast.emit('path_data', params);	
+//		console.log('done with loc');
 	});
 	socket.on('time_req', function(params){
 		//console.log(params);

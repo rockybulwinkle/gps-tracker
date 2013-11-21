@@ -82,7 +82,7 @@ def serial_handler(lock):
 	serial_port = serial.Serial(port=GPS_PORT, baudrate=9600)
 	last_date = None
 	for line in serial_port:
-		out_file = open("../var/log.dat","a")
+		out_file = open("var/log.dat","a")
 		out_file.write(line)
 		out_file.close()
 		socketIO._transport.send_heartbeat()
